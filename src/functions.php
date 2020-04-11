@@ -281,11 +281,13 @@ if (!\function_exists('Psy\\bin')) {
     /**
      * `psysh` command line executable.
      *
+     * @param $usingLocalAutoloader bool Whether we're using a local autoloader (and a local psysh version)
+     *
      * @return \Closure
      */
-    function bin()
+    function bin($usingLocalAutoloader = false)
     {
-        return function () {
+        return function () use ($usingLocalAutoloader) {
             if (!isset($_SERVER['PSYSH_IGNORE_ENV']) || !$_SERVER['PSYSH_IGNORE_ENV']) {
                 if (defined('HHVM_VERSION_ID') && \HHVM_VERSION_ID < 31800) {
                     fwrite(STDERR, 'HHVM 3.18 or higher is required. You can set the environment variable PSYSH_IGNORE_ENV=1 to override this restriction and proceed anyway.' . PHP_EOL);
@@ -375,7 +377,7 @@ EOL;
                 exit(0);
             }
 
-            $shell = new Shell($config);
+            $shell = new Shell($config, $usingLocalAutoloader);
 
             // Pass additional arguments to Shell as 'includes'
             $shell->setIncludes($input->getArgument('include'));

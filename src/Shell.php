@@ -57,7 +57,12 @@ class Shell extends Application
 
     private $config;
     private $cleaner;
+
+    /**
+     * @var OutputInterface
+     */
     private $output;
+
     private $originalVerbosity;
     private $readline;
     private $inputBuffer;
@@ -74,13 +79,15 @@ class Shell extends Application
     private $matchers = [];
     private $commandsMatcher;
     private $lastExecSuccess = true;
+    private $usingLocalAutoloader;
 
     /**
      * Create a new Psy Shell.
      *
      * @param Configuration|null $config (default: null)
+     * @param $usingLocalAutoloader bool Whether we're using a local autoloader (and a local psysh version)
      */
-    public function __construct(Configuration $config = null)
+    public function __construct(Configuration $config = null, $usingLocalAutoloader = false)
     {
         $this->config        = $config ?: new Configuration();
         $this->cleaner       = $this->config->getCodeCleaner();
@@ -93,11 +100,12 @@ class Shell extends Application
         $this->loopListeners = $this->getDefaultLoopListeners();
 
         parent::__construct('Psy Shell', self::VERSION);
-
         $this->config->setShell($this);
 
         // Register the current shell session's config with \Psy\info
         \Psy\info($this->config);
+
+        $this->usingLocalAutoloader = $usingLocalAutoloader;
     }
 
     /**
@@ -360,6 +368,11 @@ class Shell extends Application
         $this->readline->readHistory();
 
         $this->output->writeln($this->getHeader());
+
+        if ($this->usingLocalAutoloader) {
+            $this->output->writeln($this->getUsingLocalAutoloaderNotice());
+        }
+
         $this->writeVersionInfo();
         $this->writeStartupMessage();
 
@@ -1495,5 +1508,13 @@ class Shell extends Application
         if ($message !== null && $message !== '') {
             $this->output->writeln($message);
         }
+    }
+
+    /**
+     * Get a message noticing the user that we're using a local autoloader.
+     */
+    private function getUsingLocalAutoloaderNotice()
+    {
+        return '<info>Using a local version autoloaded by Composer.</info>';
     }
 }
